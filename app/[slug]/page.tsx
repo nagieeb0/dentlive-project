@@ -1,29 +1,21 @@
 import { notFound } from 'next/navigation';
-import type { Metadata, ResolvingMetadata } from 'next';
+import type { Metadata } from 'next'; // <--- السطر ده بس اللي اتغير
 
 // -- دالة عشان تجيب الـ HTML من Vercel Blob باستخدام fetch --
 async function getDoctorHtml(slug: string): Promise<string | null> {
-    // نتأكد إن الـ ID موجود في الـ Environment Variables
     const storeId = process.env.BLOB_STORE_ID;
     if (!storeId) {
         console.error("BLOB_STORE_ID environment variable is not set.");
         return null;
     }
-
-    // بنبني اللينك المباشر للملف
     const blobUrl = `https://${storeId}.public.blob.vercel-storage.com/doctors/${slug}.html`;
-
     try {
-        // بنستخدم fetch العادية
-        const response = await fetch(blobUrl, { next: { revalidate: 60 } }); // بنضيف revalidate عشان يعمل cache لمدة دقيقة مثلاً
-
-        // لو الصفحة مش موجودة (404) أو فيه مشكلة، بنرجع null
+        const response = await fetch(blobUrl, { next: { revalidate: 60 } }); 
         if (!response.ok) {
             console.warn(`Failed to fetch blob for slug: ${slug}, Status: ${response.status}`);
             return null;
         }
-
-        return await response.text(); // بنرجع محتوى الـ HTML
+        return await response.text();
     } catch (error: unknown) {
         console.error('Error fetching page from Blob URL:', slug, error);
         return null;
