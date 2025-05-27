@@ -1,39 +1,35 @@
+import { get } from '@vercel/blob'; // هنرجع نستخدم get وهنعدل دالتها
 import { notFound } from 'next/navigation';
 import type { Metadata, ResolvingMetadata } from 'next';
 
-// -- دالة عشان تجيب الـ HTML من Vercel Blob --
+// --- تعديل دالة getDoctorHtml ---
 async function getDoctorHtml(slug: string): Promise<string | null> {
-    // بنبني الـ URL بتاع الملف مباشرة
-    // لازم تتأكد إن الـ Store ID بتاعك صح (هتلاقيه في الداش بورد بتاعت Vercel Storage)
-    // أو الأفضل تجيبه من Environment Variable
-    const blobUrl = `https://<YOUR_STORE_ID>.public.blob.vercel-storage.com/doctors/${slug}.html`;
-
     try {
-        // بنستخدم fetch العادية عشان نجيب محتوى الملف
-        const response = await fetch(blobUrl);
-
-        // لو الـ Response مش OK (زي 404)، بنرجع null
-        if (!response.ok) {
-            console.warn(`Failed to fetch blob for slug: ${slug}, Status: ${response.status}`);
-            return null;
+        // بنستخدم get تاني بس بنتأكد إننا بنتعامل مع الخطأ صح
+        const blobResponse = await get(`doctors/${slug}.html`, {
+            token: process.env.BLOB_READ_WRITE_TOKEN
+        });
+        return await blobResponse.text();
+    } catch (error: unknown) { // <--- التعديل هنا: unknown
+        // بنفحص لو الخطأ نوعه "not_found"
+        if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'not_found') {
+            console.warn(`Blob not found for slug: ${slug}`);
+        } else {
+            console.error('Error fetching page from Blob:', slug, error);
         }
-
-        return await response.text(); // بنرجع محتوى الـ HTML كنص
-    } catch (error: any) {
-        console.error('Error fetching page from Blob URL:', slug, error);
         return null;
     }
 }
 // -----------------------------------------
 
-// -- (اختياري بس مهم للـ SEO) دالة عشان تولد العنوان والوصف --
+
 type Props = {
   params: { slug: string }
 }
 
 export async function generateMetadata(
   { params }: Props,
-  parent: ResolvingMetadata
+  _parent: ResolvingMetadata // <--- التعديل هنا: ضفنا "_" قبل parent
 ): Promise<Metadata> {
     const slug = params.slug;
     const htmlContent = await getDoctorHtml(slug);
@@ -61,9 +57,7 @@ export async function generateMetadata(
         },
     };
 }
-// -------------------------------------------------------------
 
-// -- دي الصفحة اللي بتتعرض فعلًا --
 export default async function DoctorPage({ params }: Props) {
     const { slug } = params;
     const htmlContent = await getDoctorHtml(slug);
@@ -76,4 +70,3 @@ export default async function DoctorPage({ params }: Props) {
         <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
     );
 }
-// ------------------------------------
