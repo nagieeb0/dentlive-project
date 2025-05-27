@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import type { Metadata } from 'next'; // <--- السطر ده بس اللي اتغير
+import type { Metadata } from 'next'; // <--- اتأكد إن دي بس اللي موجودة
 
 // -- دالة عشان تجيب الـ HTML من Vercel Blob باستخدام fetch --
 async function getDoctorHtml(slug: string): Promise<string | null> {
@@ -23,13 +23,13 @@ async function getDoctorHtml(slug: string): Promise<string | null> {
 }
 // -----------------------------------------
 
-// -- (اختياري بس مهم للـ SEO) دالة عشان تولد العنوان والوصف --
-type Props = {
-  params: { slug: string }
-}
+// -- بنعرف النوع هنا مباشرة --
+type PageComponentProps = {
+  params: { slug: string };
+};
 
-// شيلنا _parent من هنا
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+// -- (اختياري بس مهم للـ SEO) دالة عشان تولد العنوان والوصف --
+export async function generateMetadata({ params }: PageComponentProps): Promise<Metadata> {
     const slug = params.slug;
     const htmlContent = await getDoctorHtml(slug);
 
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // -------------------------------------------------------------
 
 // -- دي الصفحة اللي بتتعرض فعلًا --
-export default async function DoctorPage({ params }: Props) {
+export default async function DoctorPage({ params }: PageComponentProps) {
     const { slug } = params;
     const htmlContent = await getDoctorHtml(slug);
 
