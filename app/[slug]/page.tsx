@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import type { Metadata } from 'next'; // <--- اتأكد إن دي بس اللي موجودة
 
 // -- دالة عشان تجيب الـ HTML من Vercel Blob باستخدام fetch --
 async function getDoctorHtml(slug: string): Promise<string | null> {
@@ -23,43 +22,13 @@ async function getDoctorHtml(slug: string): Promise<string | null> {
 }
 // -----------------------------------------
 
-// -- بنعرف النوع هنا مباشرة --
-type PageComponentProps = {
+// -- بنعرف النوع هنا مباشرة وبشكل أبسط --
+type DoctorPageProps = {
   params: { slug: string };
 };
 
-// -- (اختياري بس مهم للـ SEO) دالة عشان تولد العنوان والوصف --
-export async function generateMetadata({ params }: PageComponentProps): Promise<Metadata> {
-    const slug = params.slug;
-    const htmlContent = await getDoctorHtml(slug);
-
-    if (!htmlContent) {
-        return { title: 'Page Not Found' };
-    }
-
-    const titleMatch = htmlContent.match(/<title>(.*?)<\/title>/i);
-    const pageTitle = titleMatch ? titleMatch[1] : `Dr. ${slug}`;
-
-    const descriptionMatch = htmlContent.match(/<meta\s+name="description"\s+content="(.*?)"/i);
-    const description = descriptionMatch ? descriptionMatch[1] : `Landing page for Dr. ${slug}`;
-
-    const imageMatch = htmlContent.match(/<meta\s+property="og:image"\s+content="(.*?)"/i);
-    const imageUrl = imageMatch ? imageMatch[1] : undefined;
-
-    return {
-        title: pageTitle,
-        description: description,
-        openGraph: {
-          title: pageTitle,
-          description: description,
-          images: imageUrl ? [imageUrl] : [],
-        },
-    };
-}
-// -------------------------------------------------------------
-
-// -- دي الصفحة اللي بتتعرض فعلًا --
-export default async function DoctorPage({ params }: PageComponentProps) {
+// -- دي الصفحة اللي بتتعرض فعلًا (من غير Metadata) --
+export default async function DoctorPage({ params }: DoctorPageProps) {
     const { slug } = params;
     const htmlContent = await getDoctorHtml(slug);
 
